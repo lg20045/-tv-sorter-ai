@@ -1,1 +1,198 @@
-<!doctype html><html lang='de'><meta name='viewport' content='width=device-width,initial-scale=1'><title>TV Sorter AI</title><style>body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f5f5f7;margin:0;color:#111}.wrap{max-width:600px;margin:auto;padding:28px 18px}.card{background:white;border-radius:20px;padding:22px;margin:14px 0;box-shadow:0 4px 20px #0001}h1{font-size:32px}.muted{color:#666}select,input,button{width:100%;box-sizing:border-box;padding:14px;margin-top:8px;border-radius:12px;border:1px solid #ddd;font-size:16px}button{background:#111;color:white;border:0;font-weight:700}.result{display:none}.row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #eee}.ok{color:#16803c;font-weight:700}</style><div class='wrap'><h1>TV Sorter AI</h1><p class='muted'>Senderliste automatisch analysieren und richtig sortieren.</p><div class='card'><label>TV-Hersteller</label><select id='brand'><option>Samsung</option><option>LG</option><option>Sony</option><option>Philips</option></select><label>Empfang</label><select id='type'><option>Vodafone Kabel</option><option>Satellit</option><option>DVB-T2</option></select><label>Aktueller Platz von Das Erste</label><input id='pos' type='number' value='58'><button id='analyze'>Problem analysieren</button></div><div class='card result' id='result'><h2>Analyse</h2><p class='ok'>Problem erkannt</p><div id='rows'></div><button id='guide'>Anleitung anzeigen</button></div></div><script>const channels=['Das Erste HD','ZDF HD','RTL HD','SAT.1 HD','ProSieben HD','VOX HD','Kabel Eins HD','RTL Zwei HD','3sat HD','arte HD'];document.getElementById('analyze').onclick=()=>{let p=+document.getElementById('pos').value||58;document.getElementById('rows').innerHTML=channels.map((c,i)=>`<div class='row'><span>${c}</span><span>${c==='Das Erste HD'?p:'—'} → <b>${i+1}</b></span></div>`).join('');document.getElementById('result').style.display='block'};document.getElementById('guide').onclick=()=>alert('Samsung: Einstellungen → Senderempfang → Sendersuchlauf → Kabel → Netzwerk. Danach Senderliste prüfen und sortieren.');</script></html>
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b0b0c">
+<title>TV Sorter AI</title>
+<style>
+:root{--bg:#f5f5f7;--card:#fff;--text:#111;--muted:#6b6b73;--line:#e3e3e8;--accent:#111;--ok:#16803c;--warn:#a15c00}
+*{box-sizing:border-box} body{margin:0;background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;color:var(--text)}
+.wrap{max-width:900px;margin:auto;padding:22px 16px 60px}.hero{background:#111;color:#fff;border-radius:28px;padding:28px 22px;margin-bottom:16px}
+h1{font-size:34px;line-height:1.05;margin:0 0 8px}.hero p{color:#c9c9cf;margin:0;line-height:1.45}
+.card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:20px;margin:14px 0;box-shadow:0 2px 10px #00000008}
+h2{font-size:22px;margin:0 0 14px} label{display:block;font-size:14px;font-weight:700;margin:14px 0 7px}
+select,input[type=text]{width:100%;height:50px;border:1px solid #d5d5db;border-radius:14px;background:#fff;padding:0 14px;font-size:16px}
+button,.filebtn{width:100%;border:0;border-radius:15px;padding:15px 16px;font-size:16px;font-weight:750;background:#111;color:#fff;margin-top:12px;display:block;text-align:center}
+button.secondary{background:#ededf0;color:#111}.filebtn{cursor:pointer}.filebtn input{display:none}
+.status{padding:13px 14px;border-radius:14px;background:#f0f0f3;margin-top:12px;font-size:14px}.ok{color:var(--ok);font-weight:750}.warn{color:var(--warn);font-weight:750}
+.hidden{display:none}.tablewrap{overflow:auto;border:1px solid var(--line);border-radius:15px;margin-top:12px}
+table{border-collapse:collapse;width:100%;min-width:520px}th,td{text-align:left;padding:11px;border-bottom:1px solid var(--line);font-size:14px}th{background:#f7f7f8}
+.badge{display:inline-block;padding:5px 9px;border-radius:999px;background:#eee;font-size:12px;font-weight:700}.arrow{font-weight:800}
+.note{color:var(--muted);font-size:13px;line-height:1.45}.drop{border:2px dashed #c9c9cf;border-radius:18px;padding:22px;text-align:center;margin-top:12px}
+.footer{color:var(--muted);font-size:12px;text-align:center;margin-top:25px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<section class="hero">
+<h1>TV Sorter AI</h1>
+<p>Senderliste prüfen und die wichtigsten deutschen TV-Sender automatisch auf die gewünschten Programmplätze bringen.</p>
+</section>
+
+<section class="card">
+<h2>1. Fernseher</h2>
+<label>Hersteller</label>
+<select id="brand"><option>Samsung</option><option>LG</option><option>Sony</option><option>Philips</option><option>Hisense</option></select>
+<label>Empfang</label>
+<select id="reception"><option>Vodafone Kabel</option><option>Satellit</option><option>DVB-T2</option><option>Anderer Kabelanbieter</option></select>
+<label>Modell / Modellnummer (optional)</label>
+<input id="model" type="text" placeholder="z. B. GQ55S95FATXZG">
+</section>
+
+<section class="card">
+<h2>2. Senderliste</h2>
+<label class="filebtn">Samsung Channel_list_*.zip auswählen
+<input id="file" type="file" accept=".zip,.scm"></label>
+<div id="fileStatus" class="status">Noch keine Senderliste geladen.</div>
+<p class="note">Die Datei wird im Browser verarbeitet. Sie wird nicht von dieser Demo an einen Server hochgeladen.</p>
+<button id="demoBtn" class="secondary">Demo-Senderliste verwenden</button>
+</section>
+
+<section class="card">
+<h2>3. Analyse</h2>
+<button id="analyzeBtn">Senderliste analysieren</button>
+<div id="analysis" class="hidden"></div>
+</section>
+
+<section class="card hidden" id="resultCard">
+<h2>4. Vorgeschlagene Reihenfolge</h2>
+<div id="results"></div>
+<button id="csvBtn" class="secondary">Sortierplan als CSV herunterladen</button>
+<button id="resetBtn" class="secondary">Neue Senderliste prüfen</button>
+<p class="note"><b>Wichtig:</b> Die erste Version erzeugt bewusst noch keine vermeintlich kompatible Samsung-ZIP, wenn das konkrete Datenbankschema nicht eindeutig erkannt wurde. Samsung-Listen unterscheiden sich je nach Modell/Firmware. Erst nach einem echten Test mit einer exportierten Liste sollte eine ZIP zurückgeschrieben werden.</p>
+</section>
+
+<div class="footer">TV Sorter AI – Prototyp. Nicht mit Samsung oder Vodafone verbunden.</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sql.js@1.13.0/dist/sql-wasm.js"></script>
+<script>
+const TARGETS=[
+"Das Erste HD","ZDF HD","RTL HD","SAT.1 HD","ProSieben HD","VOX HD",
+"Kabel Eins HD","RTL Zwei HD","3sat HD","arte HD"
+];
+let loaded=null, rows=[], analysisRows=[];
+
+const $=id=>document.getElementById(id);
+function norm(s){return String(s||"").toLowerCase().normalize("NFD").replace(/[\\u0300-\\u036f]/g,"").replace(/\\s+/g," ").trim()}
+function esc(s){return String(s??"").replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]))}
+function matchTarget(name){
+ const n=norm(name).replace(/\\b(uhd|sd)\\b/g,"").trim();
+ for(const t of TARGETS){
+   const tn=norm(t);
+   if(n===tn) return t;
+   if(tn.includes("hd") && n===tn.replace(/ hd$/,"")) return t;
+   if(n.includes(tn) || tn.includes(n)) return t;
+ }
+ return null;
+}
+function demoRows(){
+ return [
+ ["33","Das Erste HD"],["34","ZDF HD"],["35","RTL HD"],["36","SAT.1 HD"],["37","ProSieben HD"],
+ ["38","VOX HD"],["39","Kabel Eins HD"],["40","RTL Zwei HD"],["41","3sat HD"],["42","arte HD"],
+ ["43","Das Erste"],["44","ZDF"],["45","RTL"],["46","ProSieben"]
+ ].map(x=>({number:+x[0],name:x[1],source:"Demo"}));
+}
+function setStatus(text, cls=""){ $("fileStatus").innerHTML=`<span class="${cls}">${esc(text)}</span>`; }
+
+$("demoBtn").onclick=()=>{loaded={type:"demo",name:"Demo-Senderliste"};rows=demoRows();setStatus("Demo-Senderliste geladen. Bereit zur Analyse.","ok");};
+$("file").onchange=async e=>{
+ const f=e.target.files[0]; if(!f)return;
+ loaded=f; setStatus("Datei wird geprüft …");
+ try{
+   const buf=await f.arrayBuffer();
+   if(f.name.toLowerCase().endsWith(".scm")) throw new Error("SCM wird in dieser Version erkannt, aber noch nicht zurückgeschrieben. Bitte für den ersten Test eine Samsung Channel_list_*.zip exportieren.");
+   const zip=await JSZip.loadAsync(buf);
+   const entries=Object.keys(zip.files);
+   const sqlite=[];
+   for(const name of entries){
+     if(zip.files[name].dir) continue;
+     const b=new Uint8Array(await zip.files[name].async("uint8array"));
+     const head=new TextDecoder("ascii").decode(b.slice(0,16));
+     if(head.startsWith("SQLite format 3")) sqlite.push({name,bytes:b});
+   }
+   if(!sqlite.length) throw new Error("Keine SQLite-Datei in der ZIP gefunden. Das Format passt nicht zur erwarteten Samsung-Channel_list-Struktur.");
+   loaded={type:"zip",file:f,zip,sqlite};
+   setStatus(`${f.name}: ${sqlite.length} SQLite-Datei(en) erkannt.`,"ok");
+ }catch(err){loaded=null;setStatus(err.message,"warn");}
+};
+
+async function inspectSQLite(item){
+ const SQL=await initSqlJs({locateFile:file=>`https://cdn.jsdelivr.net/npm/sql.js@1.13.0/dist/${file}`});
+ const db=new SQL.Database(item.bytes);
+ const tables=db.exec("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name");
+ const names=tables[0]?.values?.map(v=>v[0])||[];
+ const out=[];
+ for(const t of names){
+   try{
+     const ti=db.exec(`PRAGMA table_info("${t.replace(/"/g,'""')}")`);
+     const cols=ti[0]?.values?.map(v=>String(v[1]))||[];
+     out.push({table:t,cols});
+   }catch{}
+ }
+ let ch=out.find(x=>/^(chnl|channel|channels)$/i.test(x.table)) || out.find(x=>/chnl/i.test(x.table));
+ if(!ch){ ch=out.find(x=>x.cols.some(c=>/channel|service|name/i.test(c)) && x.cols.some(c=>/num|lcn|prcn|index/i.test(c))); }
+ return {db,tables:out,channelTable:ch};
+}
+function chooseCol(cols, patterns){return cols.find(c=>patterns.some(p=>p.test(c)))}
+function extractFromDB(info){
+ const ch=info.channelTable;if(!ch)return [];
+ const db=info.db, q=`SELECT * FROM "${ch.table.replace(/"/g,'""')}" LIMIT 5000`;
+ const r=db.exec(q)[0]; if(!r)return [];
+ const cols=r.columns, vals=r.values;
+ const numCol=chooseCol(cols,[/^prcn$/i,/^lcn$/i,/channel.?num/i,/program.?num/i,/^num$/i,/^number$/i,/^ch.?no/i,/^ch.?num/i]);
+ const nameCol=chooseCol(cols,[/service.*name/i,/channel.*name/i,/^name$/i,/^label$/i,/^title$/i]);
+ if(!numCol || !nameCol) return [];
+ return vals.map(v=>{
+   const o={};cols.forEach((c,i)=>o[c]=v[i]);
+   return {number:Number(o[numCol]),name:String(o[nameCol]??""),source:ch.table};
+ }).filter(x=>x.name && Number.isFinite(x.number));
+}
+$("analyzeBtn").onclick=async()=>{
+ $("analysis").classList.remove("hidden");
+ $("analysis").innerHTML='<div class="status">Analyse läuft …</div>';
+ if(!loaded){$("analysis").innerHTML='<div class="status"><span class="warn">Bitte zuerst eine Senderliste auswählen.</span></div>';return;}
+ try{
+   if(loaded.type==="demo"){rows=demoRows();}
+   else{
+     const infos=[];
+     for(const s of loaded.sqlite) infos.push(await inspectSQLite(s));
+     let found=[];
+     for(const i of infos){const r=extractFromDB(i); if(r.length)found.push(...r);}
+     rows=found;
+     if(!rows.length){
+       $("analysis").innerHTML='<div class="status"><span class="warn">Die ZIP wurde erkannt, aber die Sender-/Nummernspalten konnten nicht eindeutig bestimmt werden.</span><br><br>Das ist absichtlich ein sicherer Abbruch. Lade die originale Samsung-ZIP hier im Chat hoch; dann können wir das konkrete Modellformat analysieren und den Schreibvorgang gezielt implementieren.</div>';
+       return;
+     }
+   }
+   analysisRows=TARGETS.map((target,i)=>{
+     const candidates=rows.filter(r=>matchTarget(r.name)===target);
+     candidates.sort((a,b)=>(a.number||999999)-(b.number||999999));
+     const hit=candidates[0];
+     return {target,current:hit?.number??null,newNumber:i+1,name:hit?.name??""};
+   });
+   const found=analysisRows.filter(x=>x.current!==null).length;
+   $("analysis").innerHTML=`<div class="status"><span class="ok">Analyse abgeschlossen.</span> ${found}/${TARGETS.length} Zielsender erkannt.</div>`;
+   renderResults();
+ }catch(e){
+   $("analysis").innerHTML=`<div class="status"><span class="warn">Analysefehler:</span> ${esc(e.message)}</div>`;
+ }
+};
+function renderResults(){
+ $("resultCard").classList.remove("hidden");
+ $("results").innerHTML=`<div class="tablewrap"><table><thead><tr><th>Sender</th><th>Aktuell</th><th>Ziel</th><th>Status</th></tr></thead><tbody>`+
+ analysisRows.map(x=>`<tr><td>${esc(x.target)}</td><td>${x.current??"—"}</td><td><b>${x.newNumber}</b></td><td>${x.current===null?'<span class="badge">nicht gefunden</span>':'<span class="badge">erkannt</span>'}</td></tr>`).join("")+
+ `</tbody></table></div>`;
+}
+$("csvBtn").onclick=()=>{
+ const lines=[["Zielplatz","Sender","Aktueller Platz"],...analysisRows.map(x=>[x.newNumber,x.target,x.current??""])]
+ .map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(";")).join("\\n");
+ const blob=new Blob(["\\ufeff"+lines],{type:"text/csv;charset=utf-8"});
+ const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="tv-sorter-ai-sortierplan.csv";a.click();
+};
+$("resetBtn").onclick=()=>location.reload();
+</script>
+</body>
+</html>
